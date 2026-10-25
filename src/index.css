@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+/* DESIGN TOKENS: one place that defines the whole look. Tailwind turns these into classes (bg-paper, text-mute, font-serif...). */
+@theme {
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-sans: 'Inter Tight', Helvetica, Arial, sans-serif;
+  --color-paper: #f4f2ee;
+  --color-ink: #111111;
+  --color-mute: #7b7770;
+  --color-line: #d9d5cd;
+  /* product colours become part of the identity */
+  --color-navy: #1f2a4a;
+  --color-lilac: #b9a7d6;
+  --color-blush: #f1c4cf;
+  --color-sky: #a9cbe8;
+  --color-hot: #e0245e;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* Utility classes reused across pages */
+.label {
+  font-size: 10px;
+  color: var(--color-mute);
+}
+
+.link-line {
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 2px;
+}
+
+.prose-soft {
+  text-transform: none;
+  letter-spacing: .01em;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.tri {
+  clip-path: polygon(50% 0, 0 100%, 100% 100%);
+}
+
+/* the brand's geometry, used sparingly */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* MOVING STRIP ("as featured in"): the track holds two identical copies, so sliding it left by exactly 50% loops with no jump.
+   It pauses on hover; users who prefer reduced motion get a still strip (rule above). */
+.marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 45s linear infinite;
+}
+
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
