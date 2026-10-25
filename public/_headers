@@ -1,0 +1,20 @@
+# Cloudflare reads this file and adds these HTTP headers to the pages that match the path.
+# It is copied from client/public into the build automatically.
+#
+# CONTENT SECURITY POLICY (CSP) for the card payment page only (HyperPay requirement).
+# A CSP tells the browser which servers this page may load scripts, styles, images and frames from.
+# If someone injected a malicious script, the browser would refuse to run it, so card details stay safe.
+#
+# - script-src: only our own files and HyperPay's card-form script. No inline scripts (the page has none), so no nonce is needed.
+# - style-src 'unsafe-inline': HyperPay's card form writes inline styles; HyperPay's own sample policy allows this too.
+# - connect-src: the page may call HyperPay and our own API (the site header loads shop settings from it).
+# - frame-src: the card fields live in a HyperPay iframe.
+# - form-action: the card form may only submit to our own site (the return page) or HyperPay.
+# - No Google Analytics / Facebook Pixel here: they are deliberately NOT allowed on the page that handles cards.
+#
+# AT GO-LIVE: replace every https://eu-test.oppwa.com below with the live address https://eu-prod.oppwa.com
+# (or add it next to the test one while testing both).
+/checkout/pay
+  Content-Security-Policy: default-src 'none'; script-src 'self' https://eu-test.oppwa.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://eu-test.oppwa.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.supabase.co https://eu-test.oppwa.com; connect-src 'self' https://leen-summaqa-api.onrender.com https://eu-test.oppwa.com; frame-src https://eu-test.oppwa.com; form-action 'self' https://eu-test.oppwa.com; base-uri 'self'; object-src 'none'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
