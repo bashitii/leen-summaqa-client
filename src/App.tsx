@@ -53,6 +53,7 @@ const Settings = lazy(() => import('./admin/Settings'));
 // An ADMIN who is signed in (Leen, via /admin/login in this browser) still sees the real shop, so she can check her products; the server
 // re-checks her role, a token alone is not enough. /admin itself is outside this gate. If the questions fail we show the normal site (fail open).
 function MaintenanceGate() {
+  const { pathname } = useLocation();
   const [view, setView] = useState<'asking' | 'closed' | 'preview' | 'open'>('asking');
   useEffect(() => {
     const base = (import.meta.env.VITE_API_URL as string | undefined) || '/api';
@@ -63,7 +64,8 @@ function MaintenanceGate() {
     }).catch(() => setView('open'));
   }, []);
   if (view === 'asking') return <div className="min-h-screen" />;
-  if (view === 'closed') return <Maintenance />;
+  // The password-reset page stays reachable while closed, so the emailed reset link works (it shows nothing else of the shop).
+  if (view === 'closed' && !pathname.startsWith('/account/reset')) return <Maintenance />;
   return <>{view === 'preview' && <div className="fixed inset-x-0 bottom-0 z-[60] bg-ink px-4 py-2 text-center text-[11px] normal-case tracking-normal text-white">Preview: the shop is closed to the public. Only you can see it.</div>}<Layout /></>;
 }
 
