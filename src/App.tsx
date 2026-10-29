@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Header from './components/Header';
@@ -10,6 +10,8 @@ import PendingOrderBanner from './components/PendingOrderBanner';
 import ConsentBanner from './components/ConsentBanner';
 import { trackPage } from './lib/analytics';
 import Home from './pages/Home';
+import Maintenance from './pages/Maintenance';
+import { adminApi, tokens } from './lib/adminApi';
 
 // Code splitting: every page except Home is its own JS chunk, downloaded only when visited (faster first load on mobile).
 const Shop = lazy(() => import('./pages/Shop'));
@@ -47,6 +49,24 @@ const Customers = lazy(() => import('./admin/Customers'));
 const Discounts = lazy(() => import('./admin/Discounts'));
 const Settings = lazy(() => import('./admin/Settings'));
 
+// MAINTENANCE GATE. Asks the server whether the shop is closed. If it is, the public sees only the "Under maintenance" page.
+// An ADMIN who is signed in (Leen, via /admin/login in this browser) still sees the real shop, so she can check her products; the server
+// re-checks her role, a token alone is not enough. /admin itself is outside this gate. If the questions fail we show the normal site (fail open).
+function MaintenanceGate() {
+  const [view, setView] = useState<'asking' | 'closed' | 'preview' | 'open'>('asking');
+  useEffect(() => {
+    const base = (import.meta.env.VITE_API_URL as string | undefined) || '/api';
+    fetch(`${base}/maintenance`).then((r) => r.json()).then(async (d) => {
+      if (!d.on) return setView('open');
+      if (tokens.get()) { try { const me = await adminApi<{ role: string }>('/me'); if (me.role === 'ADMIN') return setView('preview'); } catch { /* not an admin */ } }
+      setView('closed');
+    }).catch(() => setView('open'));
+  }, []);
+  if (view === 'asking') return <div className="min-h-screen" />;
+  if (view === 'closed') return <Maintenance />;
+  return <>{view === 'preview' && <div className="fixed inset-x-0 bottom-0 z-[60] bg-ink px-4 py-2 text-center text-[11px] normal-case tracking-normal text-white">Preview: the shop is closed to the public. Only you can see it.</div>}<Layout /></>;
+}
+
 function Layout() {
   const { pathname } = useLocation();
   useEffect(() => { scrollTo(0, 0); trackPage(pathname); }, [pathname]);   // new page starts at the top; count the page view (only after cookie consent)
@@ -77,7 +97,7 @@ export default function App() {
       <Route path="messages" element={<AdminMessages />} />
       <Route path="journal" element={<AdminJournal />} />
     </Route>
-    <Route element={<Layout />}>
+    <Route element={<MaintenanceGate />}>
     <Route index element={<Home />} />
     <Route path="shop" element={<Shop />} />
     <Route path="collections" element={<Collections />} />
